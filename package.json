@@ -5,6 +5,7 @@
   "main": "index.js",
   "type": "commonjs",
   "dependencies": {
+    "@vendia/serverless-express": "^4.12.6",
     "mysql2": "^3.0.0"
   }
 }
