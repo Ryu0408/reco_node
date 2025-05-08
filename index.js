@@ -13,7 +13,7 @@ exports.handler = async (event) => {
     } = body;
 
     const conn = await mysql.createConnection({
-      host: 'reco-db.c3e20kceayfz.ap-northeast-2.rds.amazonaws.com',
+      host: 'reco-db.c3e2okceayfz.ap-northeast-2.rds.amazonaws.com',
       user: 'admin',
       password: 'tmdghks2060!',
       database: 'reco-schema'
