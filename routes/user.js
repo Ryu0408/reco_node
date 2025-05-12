@@ -64,14 +64,15 @@ router.post('/register', async (req, res) => {
       JSON.stringify(user_preferences)
     ]);
 
-    conn.release(); // 반드시 반납!
+    conn.release();
 
-    res.status(200).json({ message: 'User registered successfully' });
+    res.status(200).json({ message: '회원가입이 완료되었습니다.' });
 
   } catch (err) {
     console.error("register 오류:", err);
-    res.status(500).json({ error: err.message || 'Internal Server Error' });
+    res.status(500).json({ error: err.message || '서버 오류가 발생했습니다.' });
   }
 });
+
 
 module.exports = router;
