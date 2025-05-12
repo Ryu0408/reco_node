@@ -21,18 +21,27 @@ router.post('/register', async (req, res) => {
   
       const sql = `
         INSERT INTO users (
-          user_email, user_password, user_name, user_age, user_gender, user_preferences
-        ) VALUES (?, ?, ?, ?, ?, ?)
+          user_email,
+          user_password,
+          user_name,
+          user_age,
+          user_gender,
+          user_preferences
+        ) VALUES (
+          AES_ENCRYPT(?, ?),
+          SHA2(?, 256),
+          AES_ENCRYPT(?, ?),
+          ?, ?, ?
+        );
       `;
   
       await conn.execute(sql, [
-        user_email,
+        user_email, process.env.MYSQL_KEY,
         user_password,
-        user_name,
+        user_name, process.env.MYSQL_KEY,
         user_age,
         user_gender,
-        JSON.stringify(user_preferences)
-      ]);
+        JSON.stringify(user_preferences)]);
   
       await conn.end();
   
