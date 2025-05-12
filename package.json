@@ -1,8 +1,12 @@
 {
+  "scripts": {
+    "dev": "nodemon lambda.js",
+    "start": "node lambda.js"
+  },
   "name": "reco-node",
   "version": "1.0.0",
   "description": "Recommendation API for AWS Lambda",
-  "main": "index.js",
+  "main": "lambda.js",
   "type": "commonjs",
   "dependencies": {
     "@vendia/serverless-express": "^4.12.6",

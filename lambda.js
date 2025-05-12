@@ -1,5 +1,19 @@
+const express = require('express');
+const cors = require('cors');
 const serverlessExpress = require('@vendia/serverless-express');
-const app = require('./index');
 require('dotenv').config();
 
-exports.handler = serverlessExpress({ app });
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+app.use('/user', require('./routes/user'));
+
+if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
+  exports.handler = serverlessExpress({ app });
+} else {
+  app.listen(process.env.PORT, () => {
+    console.log(`🚀 Local server running at http://localhost:${process.env.PORT}`);
+  });
+}
