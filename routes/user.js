@@ -13,10 +13,10 @@ router.post('/register', async (req, res) => {
       } = req.body;
   
       const conn = await mysql.createConnection({
-        host: 'reco-db.c3e2okceayfz.ap-northeast-2.rds.amazonaws.com',
-        user: 'admin',
-        password: 'tmdghks2060!',
-        database: 'reco-schema'
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME,
       });
   
       const sql = `
