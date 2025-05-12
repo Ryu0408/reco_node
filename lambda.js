@@ -14,6 +14,6 @@ if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
   exports.handler = serverlessExpress({ app });
 } else {
   app.listen(process.env.PORT, () => {
-    console.log(`🚀 Local server running at http://localhost:${process.env.PORT}`);
+    console.log(`🚀 로컬서버 시작! 주소는 http://localhost:${process.env.PORT}`);
   });
 }
