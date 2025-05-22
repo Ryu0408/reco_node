@@ -3,6 +3,7 @@
 > 개인화 추천 기능을 위한 **Express + MySQL** 기반 API 서버
 
 [👉 배포된 사이트 바로가기](https://reco-client-nu.vercel.app/)
+[👉 ERD](https://www.erdcloud.com/d/uCAkSgPD6LHhFkF2Z/)
 
 ---
 
