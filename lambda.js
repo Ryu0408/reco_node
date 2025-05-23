@@ -7,7 +7,6 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-
 app.use('/user', require('./routes/user'));
 
 if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
