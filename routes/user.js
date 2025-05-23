@@ -93,10 +93,11 @@ router.post('/send-code', async (req, res) => {
     conn.release();
 
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'email-smtp.ap-northeast-2.amazonaws.com',
+      port: 587,
       auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS
+        user: process.env.SES_SMTP_USER,
+        pass: process.env.SES_SMTP_PASS
       }
     });
 
