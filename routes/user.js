@@ -1,6 +1,41 @@
 const router = require('express').Router();
 const pool = require('../src/db');
-const nodemailer = require('nodemailer');
+const { SESv2Client, SendEmailCommand } = require('@aws-sdk/client-sesv2');
+const { defaultProvider } = require('@aws-sdk/credential-provider-node');
+
+const ses = new SESv2Client({
+  region: 'ap-northeast-2',
+  credentials: defaultProvider(),
+});
+
+const sendVerificationEmail = async (email, code) => {
+  const command = new SendEmailCommand({
+    Destination: { ToAddresses: [email] },
+    Content: {
+      Simple: {
+        Subject: { Data: '[RYUFLIX] 이메일 인증코드', Charset: 'UTF-8' },
+        Body: {
+          Html: {
+            Data: `
+              <div style="font-family: 'Pretendard', sans-serif; padding: 24px;">
+                <h2 style="color: #ff4d4d;">RYUFLIX 이메일 인증</h2>
+                <p style="font-size: 16px; color: #333;">아래 인증코드를 입력하여 이메일 주소를 인증해 주세요.</p>
+                <div style="margin: 24px 0; padding: 16px; background: #fff; border: 1px dashed #ff4d4d; border-radius: 8px; text-align: center;">
+                  <span style="font-size: 28px; font-weight: bold; letter-spacing: 2px; color: #ff4d4d;">${code}</span>
+                </div>
+                <p style="font-size: 14px; color: #888;">※ 인증코드는 발송 시점으로부터 5분간 유효합니다.</p>
+                <p style="font-size: 13px; color: #aaa; margin-top: 32px;">© 2025 RYUFLIX. All rights reserved.</p>
+              </div>`,
+            Charset: 'UTF-8'
+          }
+        }
+      }
+    },
+    FromEmailAddress: 'ryuga77758@gmail.com'
+  });
+
+  await ses.send(command);
+};
 
 router.post('/check-email', async (req, res) => {
   try {
@@ -16,7 +51,7 @@ router.post('/check-email', async (req, res) => {
       WHERE user_email = AES_ENCRYPT(?, ?);
     `;
     const [rows] = await conn.execute(sql, [user_email, process.env.MYSQL_KEY]);
-    conn.release(); // 반납 중요!
+    conn.release();
 
     res.status(200).json({ exists: rows[0].count > 0 });
 
@@ -84,39 +119,12 @@ router.post('/send-code', async (req, res) => {
 
     const conn = await pool.getConnection();
     await conn.execute(
-      `
-      REPLACE INTO email_verifications (email, code, expires_at)
-      VALUES (?, ?, ?)
-      `,
+      `REPLACE INTO email_verifications (email, code, expires_at) VALUES (?, ?, ?)`,
       [email, code, expiresAt]
     );
     conn.release();
 
-    const transporter = nodemailer.createTransport({
-      host: 'email-smtp.ap-northeast-2.amazonaws.com',
-      port: 587,
-      auth: {
-        user: process.env.SES_SMTP_USER,
-        pass: process.env.SES_SMTP_PASS
-      }
-    });
-
-    await transporter.sendMail({
-      from: '"RYUFLIX" <ryuga77758@gmail.com>',
-      to: email,
-      subject: '[RYUFLIX] 이메일 인증코드',
-      html: `
-        <div style="font-family: 'Pretendard', 'Noto Sans KR', sans-serif; padding: 24px; border: 1px solid #eee; border-radius: 12px; max-width: 500px; margin: 0 auto; background-color: #fafafa;">
-          <h2 style="color: #ff4d4d;">RYUFLIX 이메일 인증</h2>
-          <p style="font-size: 16px; color: #333;">아래 인증코드를 입력하여 이메일 주소를 인증해 주세요.</p>
-          <div style="margin: 24px 0; padding: 16px; background: #fff; border: 1px dashed #ff4d4d; border-radius: 8px; text-align: center;">
-            <span style="font-size: 28px; font-weight: bold; letter-spacing: 2px; color: #ff4d4d;">${code}</span>
-          </div>
-          <p style="font-size: 14px; color: #888;">※ 인증코드는 발송 시점으로부터 5분간 유효합니다.</p>
-          <p style="font-size: 13px; color: #aaa; margin-top: 32px;">© 2025 RYUFLIX. All rights reserved.</p>
-        </div>
-      `
-    });
+    await sendVerificationEmail(email, code);
 
     res.status(200).json({ success: true });
   } catch (err) {
@@ -137,12 +145,10 @@ router.post('/verify-code', async (req, res) => {
 
   try {
     const conn = await pool.getConnection();
-
     const [rows] = await conn.execute(
       `SELECT code, expires_at FROM email_verifications WHERE email = ?`,
       [email]
     );
-
     conn.release();
 
     const row = rows[0];
@@ -155,7 +161,6 @@ router.post('/verify-code', async (req, res) => {
     }
 
     const now = new Date();
-
     if (now > row.expires_at) {
       return res.status(200).json({
         verified: false,
@@ -171,6 +176,7 @@ router.post('/verify-code', async (req, res) => {
     }
 
     await conn.execute('DELETE FROM email_verifications WHERE email = ?', [email]);
+    conn.release();
 
     return res.status(200).json({
       verified: true,
@@ -185,7 +191,5 @@ router.post('/verify-code', async (req, res) => {
     });
   }
 });
-
-
 
 module.exports = router;
